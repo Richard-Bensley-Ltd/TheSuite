@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 
+# Author: Richard Bensley
+# Created: 01/02/2024
+# Description: Copy binlogs, dump user grants, and perform Backups and restores using mariadb-backup or mariadb-dump
 
 import os
 import sys
