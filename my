@@ -2,16 +2,16 @@
 
 JOURNAL_MARIADB="${JOURNAL_MARIADB:=mariadb}"
 JOURNAL_AUDIT="${JOURNAL_AUDIT:=mysql-server_auditing}"
-BACKUP_DATE="${BACKUP_DATE:=$(date +'%d%m%Y-%H%M%S')}"
-BACKUP_DIR="${BACKUP_DIR:=/mnt/backups}"
-BACKUP_NAME="bkp-mariadb-${BACKUP_DATE}"
-BACKUP_PATH="${BACKUP_DIR}/${BACKUP_NAME}"
-BACKUP_COMPRESSOR="${BACKUP_COMPRESSOR:=gzip}"
-BACKUP_EXT="${BACKUP_EXT:=sql.gz}"
 
-BACKUP_DUMP_FILE="${BACKUP_DIR}/${BACKUP_DATE}/${BACKUP_NAME}.${BACKUP_EXT}"
+BACKUP_ROOT="${BACKUP_ROOT:=/mnt/data/backups}"
+BACKUP_DATE="${BACKUP_DATE:=$(date +'%d%m%Y-%H%M%S')}"
+BACKUP_NAME="${BACKUP_FILE:=full-bkp-${BACKUP_DATE}}"
+BACKUP_FILE="${BACKUP_FILE:=${BACKUP_ROOT}/${BACKUP_NAME}.gz}"
 
 DUMP_OPTS="${DUMP_OPTS:=--all-databases --single-transaction --master-data=2 --routines --triggers --events}"
+DUMP_NAME="${DUMP_NAME:=dump-${BACKUP_DATE}}"
+DUMP_FILE="${DUMP_FILE:=${BACKUP_ROOT}/${DUMP_NAME}}"
+
 
 stop_slave() {
     mariadb --show-warnings -NBe "STOP SLAVE"
@@ -42,27 +42,24 @@ slaves() {
     mariadb -e "show slave hosts"
 }
 
-errors() {
+error_log() {
     journalctl -u ${JOURNAL_MARIADB} -xe
 }
 
-audit() {
+audit_log() {
     journalctl -u ${JOURNAL_MARIADB} -xe
 }
 
 backup() {
-    mariadb-backup --backup --target-dir
-}
-
-restore() {
-    mariadb-backup --prepare 
+    mariadb-backup --backup --stream=mbstream | gzip > ${BACKUP_FILE}
 }
 
 dump() {
-    mariadb-dump ${DUMP_OPTS} | ${BACKUP_COMPRESSOR} > ${BACKUP_DUMP_FILE}
+    mariadb-dump ${DUMP_OPTS} | gzip > ${DUMP_FILE}
 }
 
-help() {
+print_usage() {
+    echo "TODO"
     exit 0
 }
 
@@ -83,8 +80,20 @@ case "${1}" in
     dump)
         dump
         ;;
-    *)
+    audit-log)
+       audit_log 
+        ;;
+    error-log)
+       error_log 
+        ;;
+    help)
        print_usage 
+        ;;
+    "-h")
+       print_usage 
+        ;;
+    *)
+       mariadb 
         ;;
 esac
 
