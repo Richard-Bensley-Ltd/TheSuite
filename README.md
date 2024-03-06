@@ -1,7 +1,8 @@
 # MariaDB Enterprise Tooling
 
 * `my`, common shortcuts
-* `backup.sh`, a comprehensive backup script to be used in a crontab.
+* `full-bkp.sh`, a comprehensive backup script.
+* `restore-bkp.sh`, restore a backup created by `full-bkp.sh`
 * `docs/`, various docs
 
 ## TODO

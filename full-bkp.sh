@@ -18,7 +18,7 @@ then
 fi
 
 echo "Starting Backup to ${BACKUP_FILE}"
-mariabackup --backup --stream=xbstream | gzip > ${BACKUP_FILE}
+mariabackup --backup --stream=mbstream | gzip > ${BACKUP_FILE}
 
 if [[ ! -f ${BACKUP_FILE} ]]
 then
