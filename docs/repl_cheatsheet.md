@@ -20,6 +20,12 @@ Change to **new master** on a slave when using GTID replication:
     CHANGE MASTER TO master_host='127.0.0.1', master_port=3312;
     START SLAVE;
 
+Set the local GTID and change master:
+
+    SET GLOBAL gtid_slave_pos = "0-1-2";
+    CHANGE MASTER TO master_host="127.0.0.1", master_port=3310, master_user="root", master_use_gtid=slave_pos;
+    START SLAVE;
+
 
 ## Sources
 
