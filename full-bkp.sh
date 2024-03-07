@@ -29,7 +29,7 @@ done
 
 # Not slave, continuing
 
-BACKUP_PREFIX="${BACKUP_PREFIX:=${BACKUP_PREFIX}}"
+BACKUP_PREFIX="${BACKUP_PREFIX:=full-bkp}"
 BACKUP_ROOT="${BACKUP_ROOT:=/glide/mysql/backup}"
 BACKUP_MOUNT="${BACKUP_MOUNT:=/mnt/db_backup_share/servicenow}"
 BACKUP_DATE="${BACKUP_DATE:=$(date +'%d%m%Y-%H%M%S')}"
