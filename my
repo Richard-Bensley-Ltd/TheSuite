@@ -8,7 +8,7 @@ BACKUP_DATE="${BACKUP_DATE:=$(date +'%d%m%Y-%H%M%S')}"
 BACKUP_NAME="${BACKUP_FILE:=full-bkp-${BACKUP_DATE}}"
 BACKUP_FILE="${BACKUP_FILE:=${BACKUP_ROOT}/${BACKUP_NAME}.gz}"
 
-DUMP_OPTS="${DUMP_OPTS:=--all-databases --single-transaction --master-data=2 --routines --triggers --events}"
+DUMP_OPTS="${DUMP_OPTS:=--all-databases --quick --single-transaction --master-data=2 --routines --triggers --events}"
 DUMP_NAME="${DUMP_NAME:=dump-${BACKUP_DATE}}"
 DUMP_FILE="${DUMP_FILE:=${BACKUP_ROOT}/${DUMP_NAME}}"
 
