@@ -2,6 +2,7 @@
 
 import os
 import sys
+import pymysql
 import argparse
 import configparser
 
@@ -12,17 +13,6 @@ MISSING_PACKAGES = []
 
 GLOBAL_STATUS = {}
 
-try:
-    import pymysql
-except ImportError:
-    MISSING_PACKAGES.append("python3-PyMySQL")
-
-try:
-    import requests
-except ImportError:
-    MISSING_PACKAGES.append("python3-requests")
-
-
 class Metrics:
     def __init__(
         self,
@@ -30,7 +20,6 @@ class Metrics:
         config: str = DEFAULT_CONFIG_FILE,
         group: str = DEFAULT_CONFIG_GROUP,
     ):
-        self.results = {}
         self.connect = pymysql.connect(
             read_default_file=config,
             read_default_group=group,
@@ -46,6 +35,9 @@ class Metrics:
             {"global_variables": "show global variables"},
         ]
         self.global_variables = {}
+    
+    def connect(self):
+        return pymysql.Connect(read_default_file=self.config, read_default_group=self.group, connect_timeout=self.timeout, cursorclass=pymysql.)
 
     def process(self, name, result):
         filters = [
