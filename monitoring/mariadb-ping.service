@@ -1,0 +1,9 @@
+[Unit]
+Description=MariaDB monitoring script
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/monitor.py
+
+[Install]
+WantedBy=multi-user.target
