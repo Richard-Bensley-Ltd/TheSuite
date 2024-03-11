@@ -54,13 +54,12 @@ class Metrics:
 
     def query(self, sql):
         try:
-            pymysql.connect(
+            c = pymysql.connect(
                 read_default_file=self.config,
                 read_default_group=self.group,
                 connect_timeout=self.timeout,
                 cursorclass=pymysql.cursors.DictCursor,
             )
-            c = self.connect()
             cur = c.cursor()
             cur.execute(sql)
             return cur.fetchall()
