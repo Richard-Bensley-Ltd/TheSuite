@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 
 import os
-import sys
 import time
+import json
+import http.client
 import socket
 import pymysql
 import argparse
@@ -15,6 +16,9 @@ DEFAULT_METRICS_TIMER = 15
 DEFAULT_PING_TIMER = 5
 DEFAULT_PING_HOST = "127.0.0.1"
 DEFAULT_PING_PORT = 8080
+DEFAULT_METRICS_HOST = "127.0.0.1"
+DEFAULT_METRICS_PORT = 9090
+DEFAULT_METRICS_EP = "/api/endpoint"
 
 KEY_SLAVE_STATUS = "slave_status"
 KEY_GLOBAL_STATUS = "global_status"
@@ -31,6 +35,9 @@ class Metrics:
         ping_timer: int = DEFAULT_PING_TIMER,
         ping_host: str = DEFAULT_PING_HOST,
         ping_port: int = DEFAULT_PING_PORT,
+        metrics_host: str = DEFAULT_METRICS_HOST,
+        metrics_port: int = DEFAULT_METRICS_PORT,
+        metrics_endpoint: str = DEFAULT_METRICS_EP,
     ):
         config_path = os.path.expanduser(config)
         self.config = config_path
@@ -40,6 +47,9 @@ class Metrics:
         self.ping_host = ping_host
         self.ping_port = ping_port
         self.metrics_timer = metrics_timer
+        self.metrics_host = metrics_host
+        self.metrics_port = metrics_port
+        self.metrics_endpoint = metrics_endpoint
         self.metrics_data = {}
 
     def query(self, sql):
@@ -146,6 +156,22 @@ class Metrics:
                 print("metrics ok")
             time.sleep(self.metrics_timer)
 
+    def push(self):
+        c = http.client.HTTPConnection(self.metrics_host, self.metrics_port)
+        headers = {"Content-type": "application/json"}
+        data = json.dumps(self.metrics_data)
+        try:
+            c.request("POST", self.metrics_endpoint, data, headers)
+            resp = c.getresponse()
+            if resp == "200":
+                print("Metrics send to API Endpoint")
+            else:
+                print("ERROR could not send metrics to endpoint!")
+        except Exception as e:
+            print(f"Error sending metrics: {e}")
+        finally:
+            c.close()
+
     def __call__(self):
         p = threading.Thread(target=self.mariadb_status, name="ping_thread")
         m = threading.Thread(target=self.metrics, name="metrics_thread")
@@ -175,6 +201,9 @@ if __name__ == "__main__":
         default=DEFAULT_METRICS_TIMER,
         help="Time in seconds between metrics queries",
     )
+    parser.add_argument("--metrics-host", default=DEFAULT_METRICS_HOST)
+    parser.add_argument("--metrics-port", default=DEFAULT_METRICS_PORT)
+    parser.add_argument("--metrics-endpoint", default=DEFAULT_METRICS_EP)
 
     args = parser.parse_args()
 
@@ -184,5 +213,8 @@ if __name__ == "__main__":
         timeout=args.timeout,
         ping_timer=args.ping_timer,
         metrics_timer=args.metrics_timer,
+        metrics_host=args.metrics_host,
+        metrics_port=args.metrics_port,
+        metrics_endpoint=args.metrics_endpoint,
     )
     m()
