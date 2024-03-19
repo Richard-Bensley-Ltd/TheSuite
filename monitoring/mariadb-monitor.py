@@ -19,11 +19,11 @@ DEFAULT_PING_PORT = 8080
 DEFAULT_METRICS_HOST = "127.0.0.1"
 DEFAULT_METRICS_PORT = 9090
 DEFAULT_METRICS_EP = "/api/endpoint"
+DEFAULT_AUDIT_FREQ = 1800
 
 KEY_SLAVE_STATUS = "slave_status"
 KEY_GLOBAL_STATUS = "global_status"
 KEY_GLOBAL_VARS = "global_vars"
-KEY_AUDIT = "audit"
 
 
 class Metrics:
@@ -39,6 +39,7 @@ class Metrics:
         metrics_host: str = DEFAULT_METRICS_HOST,
         metrics_port: int = DEFAULT_METRICS_PORT,
         metrics_endpoint: str = DEFAULT_METRICS_EP,
+        audit_frequency: int = DEFAULT_AUDIT_FREQ,
     ):
         config_path = os.path.expanduser(config)
         self.config = config_path
@@ -52,6 +53,8 @@ class Metrics:
         self.metrics_port = metrics_port
         self.metrics_endpoint = metrics_endpoint
         self.metrics_data = {}
+        self.audit_data = {}
+        self.audit_frequency = DEFAULT_AUDIT_FREQ
 
     def query(self, sql):
         try:
@@ -144,6 +147,18 @@ class Metrics:
     def show_global_variables(self):
         sql = "SHOW GLOBAL VARIABLES"
         self.show_global(sql, KEY_GLOBAL_VARS)
+
+    def audit_queries(self):
+        pass
+
+    def audit(self):
+        while True:
+            if not self.pint():
+                print("No ping, no audit")
+            else:
+                self.audit_queries()
+                print("audit ok")
+            time.sleep(self.audit_frequency)
 
     def metrics(self):
         while True:
