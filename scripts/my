@@ -46,11 +46,11 @@ slave_status() {
     mariadb -E -e "show slave status"
 }
 
-master() {
+master_status() {
     mariadb -e "show master status"
 }
 
-slaves() {
+show-slaves() {
     mariadb -e "show slave hosts"
 }
 
@@ -72,7 +72,7 @@ dump() {
 
 print_usage() {
     echo "Available commands:"
-    echo "$0 [stop|start|restart|status|backup|dump|slave|slave-status|start-slave|stop-slave|master|set-read-only|set-write]"
+    declare -F | sed 's/_/-/g' | cut -d" " -f 3
     exit 0
 }
 
@@ -90,9 +90,6 @@ case "${1}" in
     status)
         status
         ;;
-    slave)
-       slave_status
-        ;;
     slave-status)
        slave_status
         ;;
@@ -102,8 +99,8 @@ case "${1}" in
     stop-slave)
        stop_slave 
         ;;
-    master)
-      master 
+    master-status)
+      master_status 
         ;;
     backup)
         backup
@@ -133,7 +130,8 @@ case "${1}" in
        print_usage 
         ;;
     *)
-       print_usage
+       echo "No command specificied"
+       exit 0
         ;;
 esac
 
