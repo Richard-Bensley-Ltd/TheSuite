@@ -22,7 +22,7 @@ then
 fi
 
 # Start
-echo -e "$(date +'%F_%H-%M-%S')\tINFO: Starting sync from ${SRC_DIR}/ to ${DESC_DIR}"
+echo -e "$(date +'%F_%H-%M-%S')\tINFO: Starting sync from ${SRC_DIR}/ to ${DEST_DIR}"
 
 # Trim any tailing slashes from both variables
 T_SRC_DIR=$(echo "$SRC_DIR" | sed 's:/*$::')
