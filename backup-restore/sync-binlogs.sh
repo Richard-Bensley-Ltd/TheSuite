@@ -31,4 +31,4 @@ T_DEST_DIR=$(echo "$DEST_DIR" | sed 's:/*$::')
 # Specifically add a trailing slash to the source
 rsync -a ${T_SRC_DIR}/ ${T_DEST_DIR} && \
     echo -e "$(date +'%F_%H-%M-%S')\tINFO: Finished sync" && \
-    exit 0 || echo -e "$(date +'%F_%H-%M-%S')\tERROR: Sync FAILED from ${T_SRC_DIR} to ${T_DESC_DIR}" && exit 1
+    exit 0 || echo -e "$(date +'%F_%H-%M-%S')\tERROR: Sync FAILED from ${T_SRC_DIR} to ${T_DESC_DIR}" && exit 1T
