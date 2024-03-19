@@ -23,6 +23,7 @@ DEFAULT_METRICS_EP = "/api/endpoint"
 KEY_SLAVE_STATUS = "slave_status"
 KEY_GLOBAL_STATUS = "global_status"
 KEY_GLOBAL_VARS = "global_vars"
+KEY_AUDIT = "audit"
 
 
 class Metrics:

@@ -3,7 +3,7 @@ Description=MariaDB monitoring script
 
 [Service]
 Type=simple
-ExecStart=/usr/local/bin/monitor.py
+ExecStart=/usr/local/bin/mariadb-monitor.py
 
 [Install]
 WantedBy=multi-user.target
