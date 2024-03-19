@@ -26,8 +26,6 @@ Set the local GTID and change master:
     CHANGE MASTER TO master_host="127.0.0.1", master_port=3310, master_user="root", master_use_gtid=slave_pos;
     START SLAVE;
 
-
 ## Sources
 
 * [https://mariadb.com/kb/en/gtid/](https://mariadb.com/kb/en/gtid/)
-* 

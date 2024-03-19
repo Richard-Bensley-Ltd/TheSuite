@@ -5,9 +5,6 @@ JOURNAL_AUDIT="${JOURNAL_AUDIT:=mysql-server_auditing}"
 
 BACKUP_ROOT="${BACKUP_ROOT:=/glide/mysql/backup}"
 BACKUP_DATE="${BACKUP_DATE:=$(date +'%d%m%Y-%H%M%S')}"
-BACKUP_NAME="${BACKUP_FILE:=full-bkp-${BACKUP_DATE}}"
-BACKUP_FILE="${BACKUP_FILE:=${BACKUP_ROOT}/${BACKUP_NAME}.gz}"
-
 DUMP_OPTS="${DUMP_OPTS:=--quick --all-databases --quick --single-transaction --master-data=2 --routines --triggers --events}"
 DUMP_NAME="${DUMP_NAME:=dump-${BACKUP_DATE}.gz}"
 DUMP_FILE="${DUMP_FILE:=${BACKUP_ROOT}/${DUMP_NAME}}"
@@ -15,6 +12,10 @@ DUMP_FILE="${DUMP_FILE:=${BACKUP_ROOT}/${DUMP_NAME}}"
 
 stop_slave() {
     mariadb --show-warnings -NBe "STOP SLAVE"
+}
+
+start_slave() {
+    mariadb --show-warnings -NBe "START SLAVE"
 }
 
 start() {
@@ -33,7 +34,15 @@ status() {
     systemctl status mariadb
 }
 
-slave() {
+set_read_only() {
+    mariadb -NBe "SET GLOBAL read_only=1"
+}
+
+set_write() {
+    mariadb -NBe "SET GLOBAL read_only=0"
+}
+
+slave_status() {
     mariadb -E -e "show slave status"
 }
 
@@ -63,7 +72,7 @@ dump() {
 
 print_usage() {
     echo "Available commands:"
-    echo "$0 [stop|start|restart|status|backup|dump]
+    echo "$0 [stop|start|restart|status|backup|dump|slave|slave-status|start-slave|stop-slave|master|set-read-only|set-write]"
     exit 0
 }
 
@@ -75,8 +84,26 @@ case "${1}" in
     start)
         start
         ;;
+    restart)
+        restart
+        ;;
     status)
         status
+        ;;
+    slave)
+       slave_status
+        ;;
+    slave-status)
+       slave_status
+        ;;
+    start-slave)
+       start_slave 
+        ;;
+    stop-slave)
+       stop_slave 
+        ;;
+    master)
+      master 
         ;;
     backup)
         backup
@@ -90,10 +117,19 @@ case "${1}" in
     error-log)
        error_log 
         ;;
+    set-read-only)
+       set_read_only
+        ;;
+    set-write)
+       set_write
+        ;;
     help)
        print_usage 
         ;;
     "-h")
+       print_usage 
+        ;;
+    "--help")
        print_usage 
         ;;
     *)
