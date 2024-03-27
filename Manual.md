@@ -28,9 +28,9 @@ Some plugins require a specific `plugin_maturity` to be set. Check the docs.
 
 Useful plugins:
 
-* [Audit](https://mariadb.com/kb/en/mariadb-audit-plugin/) Plugin, it audits.
-* [SQL Error](https://mariadb.com/kb/en/sql-error-log-plugin/) Plugin, records mis-type and incorrect SQL into a log file.
-* [Disks Plugin](https://mariadb.com/kb/en/disks-plugin/) have the system disk info available in a table.
+* [Audit](https://mariadb.com/kb/en/mariadb-audit-plugin/) Plugin, configurable database ordering.
+* [SQL Error](https://mariadb.com/kb/en/sql-error-log-plugin/) Plugin, records mis-typed and incorrect SQL into a log file.
+* [Disks Plugin](https://mariadb.com/kb/en/disks-plugin/) have the system disk info available in a table at `information_schema.disks`.
 
 ## Data Consistency (ACID)
 
@@ -50,7 +50,7 @@ Replication options:
 * Asynchronous replication, the most prelevant option.
 * Semi-Synchronous replication, enabled via a plugin, will only complete a client transaction when at least one slave has received the change.
 * Galera, two phase commits, shared everything self-healing cluster. Highly recommended.
-* Spider, a sharding ending. Not a ready-to-go solution.
+* Spider, a horizontal sharding solution. Not a ready-to-go solution.
 
 ## Failover
 
