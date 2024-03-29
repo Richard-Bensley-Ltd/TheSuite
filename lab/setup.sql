@@ -1,8 +1,5 @@
-GRANT ALL PRIVILEGES ON *.* TO vagrant@localhost IDENTIFIED VIA unix_socket;
-
+GRANT ALL PRIVILEGES ON *.* TO vagrant@localhost IDENTIFIED VIA unix_socket WITH GRANT OPTION;
 GRANT REPLICATION SLAVE ON *.* TO 'repl'@'%' IDENTIFIED BY 'repl';
-
 GRANT ALL PRIVILEGES ON test.* TO 'dev'@'%' IDENTIFIED BY 'dev';
-
 GRANT SUPER, PROCESS, RELOAD ON *.* TO 'dba'@'%' IDENTIFIED BY 'dba';
 

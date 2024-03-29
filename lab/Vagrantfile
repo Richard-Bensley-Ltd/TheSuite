@@ -2,14 +2,15 @@ $setup= <<-SETUP
 dnf install -yq epel-release
 dnf update -yq
 dnf upgrade -yq
-dnf install -yq vim python3-PyMySQL jq tmux curl wget mariadb-client
+dnf install -yq vim python3-PyMySQL jq tmux curl wget python3-requests
 SETUP
 
 $install_mariadb= <<-INSTALL_MARIADB
 dnf install -yq mariadb-server mariadb-backup && \
     systemctl enable mariadb && \
-    systemctl restart mariadb && \
-    mariadb < /vagrant/setup.sql
+    systemctl restart mariadb
+    if [[ -e /home/vagrant/setup.sql ]]; then mariadb < /home/vagrant/setup.sql; fi
+    if [[ -e /home/vagrant/custom.cnf ]]; then cp /home/vagrant/custom.cnf /etc/my.cnf.d/custom.cnf; fi
 INSTALL_MARIADB
 
 $install_maxscale= <<-INSTALL_MAXSCALE
@@ -23,14 +24,19 @@ Vagrant.configure("2") do |config|
       config.vm.define "db#{i}" do |node|
         node.vm.hostname = "db#{i}"
         node.vm.network "private_network", ip:"192.168.51.1#{i}"
+        node.vm.provision "file", source: "setup.sql", destination: "/home/vagrant/setup.sql"
+        node.vm.provision "file", source: "custom.cnf", destination: "/home/vagrant/custom.cnf"
         node.vm.provision "shell", inline: $setup
         node.vm.provision "shell", inline: $install_mariadb
+        node.vm.provision "shell", inline: "echo -e '[mariadbd]\nserver_id=#{i}\n' > /etc/my.cnf.d/repl.cnf"
+        node.vm.provision "shell", inline: "systemctl restart mariadb"
     end
   end
 
   config.vm.define "mxs", primary: true do |m|
     m.vm.hostname = "mxs"
     m.vm.network "private_network", ip:"192.168.50.10"
+    #m.vm.provision "file", source: "maxscale.cnf", destination: "/etc/maxscale.cnf"
     m.vm.provision "shell", inline: $setup
     m.vm.provision "shell", inline: $install_maxscale
   end

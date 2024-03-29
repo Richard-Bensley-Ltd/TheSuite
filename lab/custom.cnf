@@ -1,0 +1,17 @@
+[mariadbd]
+plugin_maturity=alpha
+
+# Replication
+log_bin
+
+# Performance related settings
+userstat=1
+performance_schema=1
+slow_query_log=1
+log_output=TABLE
+long_query_time=5.0
+log_queries_not_using_indexes=ON
+log_slow_verbosity='explain'
+
+# Monitoring
+plugin_load_add=disks
