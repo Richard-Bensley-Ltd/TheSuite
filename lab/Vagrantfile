@@ -2,7 +2,7 @@ $setup= <<-SETUP
 dnf install -yq epel-release
 dnf update -yq
 dnf upgrade -yq
-dnf install -yq vim git python3-PyMySQL jq tmux curl wget
+dnf install -yq vim python3-PyMySQL jq tmux curl wget mariadb-client
 SETUP
 
 $install_mariadb= <<-INSTALL_MARIADB
@@ -15,46 +15,9 @@ INSTALL_MARIADB
 $install_maxscale= <<-INSTALL_MAXSCALE
 INSTALL_MAXSCALE
 
-$memory = 512
-$cpus = 1
-$disk = "1G"
-
 
 Vagrant.configure("2") do |config|
   config.vm.box = "generic/rocky9"
-  config.vm.synced_folder ".", "/vagrant"
-
-
-  config.vm.provider "libvirt" do |libvirt|
-      libvirt.memory = $memory
-      libvirt.cpus = $cpus
-      libvirt.storage :file, :size => $disk
-    end
-
-  config.vm.provider "hyperv" do |hv|
-    hv.memory = $memory
-    hv.cpus = $cpus
-    hv.disksize.size = $disk
-  end
-
-  config.vm.provider "virtualbox" do |vb|
-    vb.memory = $memory
-    vb.cpus = $cpus
-    vb.customize ["modifyvm", :id, "--hddsize", $disk]
-  end
-
-  config.vm.provider "vmware_fusion" do |vmware|
-    vmware.memory = $memory
-    vmware.cpus = $cpus
-    vmware.disksize.size = $disk
-  end
-
-  config.vm.provider "qemu" do |qe|
-    qe.machine = "virt,accel=hvf,highmem=off"
-    qe.cpu = "cortex-a72"
-    qe.memoru = $memory
-  end
-
 
   1.upto(4) do |i|
       config.vm.define "db#{i}" do |node|
