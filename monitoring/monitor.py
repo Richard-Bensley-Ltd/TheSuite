@@ -3,22 +3,15 @@
 import os
 import time
 import json
-import http.client
-import socket
 import pymysql
 import argparse
 import threading
+import numpy as np
 
 DEFAULT_CONFIG_FILE = "~/.my.cnf"
-DEFAULT_CONFIG_GROUP = "client"
 DEFAULT_TIMEOUT = 3
 DEFAULT_METRICS_TIMER = 15
-DEFAULT_PING_TIMER = 5
-DEFAULT_PING_HOST = "127.0.0.1"
-DEFAULT_PING_PORT = 8080
-DEFAULT_METRICS_HOST = "127.0.0.1"
-DEFAULT_METRICS_PORT = 9090
-DEFAULT_METRICS_EP = "/api/endpoint"
+DEFAULT_METRICS_DB = "~/.metrics.db"
 
 KEY_SLAVE_STATUS = "slave_status"
 KEY_GLOBAL_STATUS = "global_status"
@@ -28,28 +21,18 @@ KEY_GLOBAL_VARS = "global_vars"
 class Metrics:
     def __init__(
         self,
+        group: str,
         config: str = DEFAULT_CONFIG_FILE,
-        group: str = DEFAULT_CONFIG_GROUP,
-        timeout: int = 5,
+        timeout: int = DEFAULT_TIMEOUT,
         metrics_timer: int = DEFAULT_METRICS_TIMER,
-        ping_timer: int = DEFAULT_PING_TIMER,
-        ping_host: str = DEFAULT_PING_HOST,
-        ping_port: int = DEFAULT_PING_PORT,
-        metrics_host: str = DEFAULT_METRICS_HOST,
-        metrics_port: int = DEFAULT_METRICS_PORT,
-        metrics_endpoint: str = DEFAULT_METRICS_EP,
+        metrics_db: str = DEFAULT_METRICS_DB,
     ):
         config_path = os.path.expanduser(config)
         self.config = config_path
         self.group = group
         self.timeout = timeout
-        self.ping_timer = ping_timer
-        self.ping_host = ping_host
-        self.ping_port = ping_port
         self.metrics_timer = metrics_timer
-        self.metrics_host = metrics_host
-        self.metrics_port = metrics_port
-        self.metrics_endpoint = metrics_endpoint
+        self.metrics_db = metrics_db
         self.metrics_data = {}
 
     def query(self, sql):
@@ -81,23 +64,7 @@ class Metrics:
         except pymysql.Error:
             return False
 
-    def mariadb_status(self):
-        # Return the status of ping() to a socket
-        while True:
-            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-                s.bind((self.ping_host, self.ping_port))
-                s.listen()
-                c, a = s.accept()
-                with c:
-                    if self.ping():
-                        print("ping ok")
-                        c.sendall(b"HTTP/1.1 200 MariaDB is up\n\n")
-                    else:
-                        print("no ping")
-                        c.sendall(b"HTTP/1.1 503 MariaDB is Unavailable\n\n")
-            time.sleep(self.ping_timer)
-
-    def binary_global_value(self, s):
+    def value_to_int(self, s):
         try:
             return float(s)
         except ValueError:
@@ -131,7 +98,7 @@ class Metrics:
         for r in result:
             n = r["Variable_name"]
             v = r["Value"]
-            v = self.binary_global_value(v)
+            v = self.value_to_int(v)
             global_status[n] = v
 
         self.metrics_data[key] = global_status
@@ -155,65 +122,36 @@ class Metrics:
                 print("metrics ok")
             time.sleep(self.metrics_timer)
 
-    def push(self):
-        c = http.client.HTTPConnection(self.metrics_host, self.metrics_port)
-        headers = {"Content-type": "application/json"}
-        data = json.dumps(self.metrics_data)
-        try:
-            c.request("POST", self.metrics_endpoint, data, headers)
-            resp = c.getresponse()
-            if resp == "200":
-                print("Metrics send to API Endpoint")
-            else:
-                print("ERROR could not send metrics to endpoint!")
-        except Exception as e:
-            print(f"Error sending metrics: {e}")
-        finally:
-            c.close()
-
     def __call__(self):
-        p = threading.Thread(target=self.mariadb_status, name="ping_thread")
         m = threading.Thread(target=self.metrics, name="metrics_thread")
-        p.start()
         m.start()
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-c", "--config-file", default=DEFAULT_CONFIG_FILE)
-    parser.add_argument("-g", "--config-group", default=DEFAULT_CONFIG_GROUP)
-    parser.add_argument(
-        "-t",
-        "--timeout",
-        default=DEFAULT_TIMEOUT,
-        help="Connection timeout in seconds to MariaDB",
-    )
-    parser.add_argument(
-        "--ping-timer",
-        default=DEFAULT_PING_TIMER,
-        help="Seconds between pings to MariaDB",
-    )
-    parser.add_argument("--ping-host", default=DEFAULT_PING_HOST)
-    parser.add_argument("--ping-port", default=DEFAULT_PING_PORT)
+    parser.add_argument("-g", "--config-groups")
+    parser.add_argument("--timeout", default=DEFAULT_TIMEOUT,
+                        help="MariaDB connection timeout")
     parser.add_argument(
         "--metrics-timer",
         default=DEFAULT_METRICS_TIMER,
         help="Time in seconds between metrics queries",
     )
-    parser.add_argument("--metrics-host", default=DEFAULT_METRICS_HOST)
-    parser.add_argument("--metrics-port", default=DEFAULT_METRICS_PORT)
-    parser.add_argument("--metrics-endpoint", default=DEFAULT_METRICS_EP)
+    parser.add_argument("--metrics-db", default=DEFAULT_METRICS_DB)
 
     args = parser.parse_args()
 
-    m = Metrics(
-        config=args.config_file,
-        group=args.config_group,
-        timeout=args.timeout,
-        ping_timer=args.ping_timer,
-        metrics_timer=args.metrics_timer,
-        metrics_host=args.metrics_host,
-        metrics_port=args.metrics_port,
-        metrics_endpoint=args.metrics_endpoint,
-    )
-    m()
+    groups = args.groups.split(",")
+    servers = []
+    for group_name in groups:
+        if group_name != "" or group_name is not None:
+            m = Metrics(
+                config=args.config_file,
+                group=group_name,
+                timeout=args.timeout,
+                metrics_timer=args.metrics_timer,
+                metrics_db=args.metrics_db,
+            )
+    for server in servers:
+        server()
