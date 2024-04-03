@@ -2,7 +2,6 @@
 
 import os
 import time
-import json
 import pymysql
 import argparse
 import threading
@@ -23,24 +22,29 @@ class Metrics:
         self,
         group: str,
         config: str = DEFAULT_CONFIG_FILE,
-        timeout: int = DEFAULT_TIMEOUT,
         metrics_timer: int = DEFAULT_METRICS_TIMER,
         metrics_db: str = DEFAULT_METRICS_DB,
     ):
         config_path = os.path.expanduser(config)
         self.config = config_path
         self.group = group
-        self.timeout = timeout
         self.metrics_timer = metrics_timer
         self.metrics_db = metrics_db
-        self.metrics_data = {}
+        self.metrics_type = np.dtype(
+            [
+                ("timestamp", np.int64),
+                ("server", "U32"),
+                ("metric", "U64"),
+                ("value", np.float64),
+            ]
+        )
+        self.metrics = np.array([], dtype=self.metrics_type)
 
     def query(self, sql):
         try:
             c = pymysql.connect(
                 read_default_file=self.config,
                 read_default_group=self.group,
-                connect_timeout=self.timeout,
                 cursorclass=pymysql.cursors.DictCursor,
             )
             cur = c.cursor()
@@ -131,25 +135,18 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-c", "--config-file", default=DEFAULT_CONFIG_FILE)
     parser.add_argument("-g", "--config-groups")
-    parser.add_argument("--timeout", default=DEFAULT_TIMEOUT,
-                        help="MariaDB connection timeout")
-    parser.add_argument(
-        "--metrics-timer",
-        default=DEFAULT_METRICS_TIMER,
-        help="Time in seconds between metrics queries",
-    )
-    parser.add_argument("--metrics-db", default=DEFAULT_METRICS_DB)
+    parser.add_argument("-t", "--metrics-timer", default=DEFAULT_METRICS_TIMER)
+    parser.add_argument("-d", "--metrics-db", default=DEFAULT_METRICS_DB)
 
     args = parser.parse_args()
 
-    groups = args.groups.split(",")
+    groups = args.config_groups.split(",")
     servers = []
     for group_name in groups:
         if group_name != "" or group_name is not None:
             m = Metrics(
                 config=args.config_file,
                 group=group_name,
-                timeout=args.timeout,
                 metrics_timer=args.metrics_timer,
                 metrics_db=args.metrics_db,
             )
