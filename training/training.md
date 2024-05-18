@@ -22,6 +22,9 @@ what is installed where
 ## SQL
 
     Look around the internal objects and helper functions
+    Engines
+    status, variables
+    internal schemas (sys)
     create some data
     Load the data
     Use the client
@@ -45,7 +48,21 @@ what is installed where
     Relay logs
     slave status
 
-## binlog events
+## binary logs
 
+    read
+    restore from start position
+
+## Best practices
+
+    I am a dummy, safe updates
+    show warnings
+    transactions
+
+## Monitoring
+
+    processlist
+    status vs variables
+    common queries
     
 
