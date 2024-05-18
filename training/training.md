@@ -22,12 +22,13 @@ what is installed where
 ## SQL
 
     Look around the internal objects and helper functions
-    Engines
     status, variables
     internal schemas (sys)
     create some data
     Load the data
     Use the client
+    Engines
+    innodb engine status
 
 ## Backup and restore
     
