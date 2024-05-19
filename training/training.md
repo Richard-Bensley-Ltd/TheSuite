@@ -1,12 +1,9 @@
 # Training
 
-First of all, let's get installed. Group exercise.
-
-Secondly. What are we covering? This is a 2 day course. Lots to do!
+Firstly. What are we covering? This is a 2 day course. Lots to do!
 
 Day 1:
 
-Muscle memory and the basics.
 Get installed and get configured.
 Get comfortable with MariaDB and data.
 Logical backups and restores. It's just Linux/Unix.
@@ -22,19 +19,15 @@ InnoDB recovery steps.
 Prelude to monitoring. What is happening?
 Galera demo.
 
+Secondly, let's get installed. Group exercise.
 
 ## Install
 
 Login to both hosts
-
-Run updates
-
-    dnf update
-    dnf upgrade
-
+Update and Upgrade
 Install MariaDB
 
-   dnf install MariaDB-server MariaDB-client MariaDB-backup
+    dnf install MariaDB-server MariaDB-client MariaDB-backup
 
 Make sure MariaDB server is enabled and will run at startup
 
