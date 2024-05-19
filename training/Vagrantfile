@@ -1,4 +1,26 @@
+$setup= <<-SETUP
+REPO_FILE=/etc/yum.repos.d/mariadb.repo
+echo "[mariadb]" > $REPO_FILE
+echo "name = MariaDB" >> $REPO_FILE
+echo "baseurl = https://rpm.mariadb.org/10.11/rhel/$releasever/$basearch" >> $REPO_FILE
+echo "module_hotfixes = 1" >> $REPO_FILE
+echo "gpgkey = https://rpm.mariadb.org/RPM-GPG-KEY-MariaDB" >> $REPO_FILE
+echo "gpgcheck = 1" >> $REPO_FILE
+
+dnf update -yq
+dnf upgrade -yq
+dnf install -yq wget curl tmux vim MariaDB-server MariaDB-client MariaDB-backup
+SETUP
+
 Vagrant.configure("2") do |config|
   config.vm.box = "generic/rhel8"
-  config.vm.hostname = "db1"
-end 
+
+  1.upto(2) do |i|
+      config.vm.define "db#{i}" do |node|
+        node.vm.hostname = "db#{i}"
+        node.vm.provision "shell", inline: $setup
+    end
+  end
+
+end
+
