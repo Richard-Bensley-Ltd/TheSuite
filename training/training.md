@@ -113,6 +113,9 @@ Select the data in a vertical layout:
 
     select * from my_table\G
 
+Databases and tables are directories and file son disk!
+By default InnoDB uses a file per-table, `innodb_file_per_table=1`.
+
 Insert and read the data from another database schema:
 
     use test;
@@ -182,6 +185,36 @@ Restart MariaDB and check the variables have been set.
     systemctl restart mariadb
     mariadb
 
+## Creating users
+
+We need to create a replication user
+
+    CREATE USER 'repl'@'%' IDENTIFIED BY 'repl123';
+    GRANT REPLICATION CLIENT ON *.* TO 'repl'@'%';
+    FLUSH PRIVILEGES;
+    SHOW GRANTS FOR 'repl'@'%';
+
+Test the user:
+
+    mariadb -urepl -prepl123
+    SHOW GRANTS;
+
+Create another user.
+
+    CREATE USER 'name'@'hostmask' IDENTIFIED BY 'password';
+    GRANT SELECT,INSERT ON test.* TO 'name'@'hostmask';
+
+Test the new user:
+
+    mariadb -uname -ppass
+    SHOW GRANTS;
+    SELECT * FROM mysql.user;
+
+What you can see in `information_schema` depends on your grants.
+Hence why monitoring users tend to have `SELECT` on `*.*`.
+
+## Binary Logs
+
 We can view the current state of the binary logs:
 
     show binary logs;
@@ -199,9 +232,6 @@ What is a GTID? What do the numbers mean?
 
 Use the `writer.sh` script to generate some data and monitor the binary log position.
 
-
-## Binary Logs
-
 We can display events in the binary log from within MariaDB:
 
     SHOW BINLOG EVENTS [IN 'log_name'] [FROM pos] [LIMIT [offset,] row_count]
@@ -209,6 +239,14 @@ We can display events in the binary log from within MariaDB:
 This is quick but not very detailed.
 
 We can use `mariadb-binlog` to view the logs.
+By default `binlog_annotate_row_events` is enabled.
+So the log data is accompanied by the SQL used to generate the changes.
+
+    mariadb-binlog [options] file_name
+
+If you want to view ROW/Binary data, it needs to be decoded:
+
+    mariadb --base64-output=DECODE-ROWS -v file_name
 
 What format are the logs in? 
 
@@ -217,10 +255,6 @@ What format are the logs in?
 * Mixed (default)
 
 How can we debug a statement that was written and replicated?
-
-By default `binlog_annotate_row_events` is enabled.
-So the log data is accompanied by the SQL used to generate the changes.
-
 
 ## Backup and restore
     
@@ -235,10 +269,24 @@ So the log data is accompanied by the SQL used to generate the changes.
     Relay logs
     slave status
 
-## binary logs
 
-    read
-    restore from start position
+
+
+## DAY 2
+## DAY 2
+## DAY 2
+## DAY 2
+## DAY 2
+
+## Diff/Inc restores using Binary logs
+
+Write logs directly to MariaDB
+
+    mariadb-binlog [start] [stop] log_file_name[s] | mariadb -u -p
+
+Debug logs from a remote server:
+
+    mariadb-binlog --read-from-remote-server
 
 ## Best practices
 
