@@ -11,7 +11,7 @@ Run updates
 
 Install MariaDB
 
-   dnf install mariadb-server
+   dnf install MariaDB-server MariaDB-client MariaDB-backup
 
 Make sure MariaDB server is enabled and will run at startup
 
@@ -45,9 +45,9 @@ We need to open up networking and use the available RAM.
 
 Edit the config and set:
 
-* bind_address = 0
-* innodb_buffer_pool_size = 70% of available RAM.
-* Check the error log settings, log_error, and set log_warnings
+* `bind_address` = 0
+* `innodb_buffer_pool_size` = 70% of available RAM.
+* Check the error log settings, `log_error`, and set `log_warnings`
 
 Reboot MariaDB and check are settings have taken affect:
 
@@ -72,6 +72,7 @@ Display available schemas:
     show databases;
     use information_schema;
     show tables;
+    show full tables;
     use mysql;
     show tables;
 
@@ -104,9 +105,13 @@ Insert some data into the table:
 
     insert into my_table (col2) values ("new data");
 
-Select that new data:
+Select the new data:
 
     select * from my_table;
+
+Select the data in a vertical layout:
+
+    select * from my_table\G
 
 Insert and read the data from another database schema:
 
@@ -197,7 +202,7 @@ Use the `writer.sh` script to generate some data and monitor the binary log posi
 
 ## Binary Logs
 
-We can display events in the binary log from with MariaDB:
+We can display events in the binary log from within MariaDB:
 
     SHOW BINLOG EVENTS [IN 'log_name'] [FROM pos] [LIMIT [offset,] row_count]
 
