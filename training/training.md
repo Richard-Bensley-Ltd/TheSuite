@@ -1,5 +1,28 @@
 # Training
 
+First of all, let's get installed. Group exercise.
+
+Secondly. What are we covering? This is a 2 day course. Lots to do!
+
+Day 1:
+
+Muscle memory and the basics.
+Get installed and get configured.
+Get comfortable with MariaDB and data.
+Logical backups and restores. It's just Linux/Unix.
+Re-covering replication, a bit more on binary logs.
+Diff/Inc backups using a full backup and binary logs.
+
+Day 2:
+
+Tips
+Slow Query Log.
+InnoDB Status and deadlock monitoring.
+InnoDB recovery steps.
+Prelude to monitoring. What is happening?
+Galera demo.
+
+
 ## Install
 
 Login to both hosts
@@ -113,8 +136,11 @@ Select the data in a vertical layout:
 
     select * from my_table\G
 
-Databases and tables are directories and file son disk!
+Databases and tables are directories and files on disk!
 By default InnoDB uses a file per-table, `innodb_file_per_table=1`.
+The data is located at `datadir`:
+
+    ls -aslh $(mariadb -NBe "select @@datadir")
 
 Insert and read the data from another database schema:
 
@@ -152,6 +178,12 @@ What other engines are available?
 
     show engines;
     show innodb engine status;
+
+Wait! What makes MariaDB ACID compliant?
+
+    `sync_binlog=1`
+    `innodb_flush_log_at_trx_commit=1`
+    `sql_mode=TRADITIONAL` # my oppinion
 
 ## Plugins
 
@@ -255,28 +287,64 @@ What format are the logs in?
 * Mixed (default)
 
 How can we debug a statement that was written and replicated?
+TOMORROW!
 
 ## Backup and restore
-    
-    Logical backup
-    Binary Backup
+
+There are two main backup tools `mariadb-dump` and `mariadb-backup`.
+Previously named `mysqldump` and `xtrabackup`.
+
+Why not `mariadb-backup`? Because we have to get dirty.
+
+Full logical backup, all databases.
+
+    mariadb-dump --all-databases
+
+What just happened?
+Let's put it somewhere useful.
+
+    mariadb-dump --all-databases > bkp.sql
+
+But that is not transactoinal!
+
+    mariadb-dump --all-databases --single-transaction
+
+But that is too slow!
+
+    --quick
+
+It's too big!
+
+    | gzip > bkp.sql.gz
+
+Is it really compressed?
+
+    file bkp.sql.gz
+
+Can I use this to create a replica?
+
+    --master-data=?
 
 ## Replication
 
-    configure slave
-    Restore slave from backup
-    Enable replication
-    Relay logs
-    slave status
+Why replicate? Off site backups?
+Read capacity? Fail-over capacity?
+All of the above?
 
+Configure the replica as above.
 
+* `server_id`
+* `log_slave_updates`
+* `log_bin`
 
+Take a backup, copy it to the replica.
+Restore the backup.
+Configure and start replication!
 
-## DAY 2
-## DAY 2
-## DAY 2
-## DAY 2
-## DAY 2
+Monitor replication.
+What do these fields mean?
+What is a relay log?
+
 
 ## Diff/Inc restores using Binary logs
 
@@ -288,11 +356,22 @@ Debug logs from a remote server:
 
     mariadb-binlog --read-from-remote-server
 
-## Best practices
 
+## DAY 2
+
+## Dirty Dicks DB Tips
+
+    client options files
     I am a dummy, safe updates
     show warnings
     transactions
+    ignore db
+    rescue file
+    tmux or screen
+    Give the mysql user a shell
+    CHEAT SHEETS
+
+## InnoDB status and recovery
 
 ## Monitoring
 
