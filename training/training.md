@@ -21,7 +21,9 @@ Day 2:
 
 Secondly, let's get installed. Group exercise.
 
-## Install
+## Day 1
+
+### Install
 
 Login to both hosts
 Update and Upgrade
@@ -50,7 +52,7 @@ What has been installed?
 * The config files in /etc/mysql
 * The socket file /var/run
 
-## First configuration
+### First configuration
 
 What configs are where, and how they are loaded.
 Notice the includes.
@@ -73,7 +75,7 @@ Reboot MariaDB and check are settings have taken affect:
 Learn how to read variable values using `SHOW GLOBAL VARIABLES LIKE '%abc%'`.
 Or select them directly, `SELECT @@my_var`.
 
-## MariaDB
+### MariaDB
 
 Now let us look around MariaDB using SQL commands.
 
@@ -99,7 +101,7 @@ Shortcuts to these tables?
     show global status;
     show global variables;
 
-## Databases and Tables
+### Databases and Tables
 
 Create a database:
 
@@ -163,7 +165,7 @@ Drop the database:
 
     drop database my_db;
 
-## Engines
+### Engines
 
 By default we always use the InnoDB engine. An ACID compliant OLTP engine.
 
@@ -178,21 +180,21 @@ Wait! What makes MariaDB ACID compliant?
     `innodb_flush_log_at_trx_commit=1`
     `sql_mode=TRADITIONAL` # my oppinion
 
-## Plugins
+### Plugins
 
 MariaDB has a healthy and active UDF and Plugin development community:
 
     show plugins;
     select * from information_schema.plugins;
 
-## Flush!
+### Flush!
 
 There are various [flush](https://mariadb.com/kb/en/flush/) commands. Depending on what you are doing.
 
     FLUSH PRIVILGES;
     FLUSH TABLES;
 
-## Prepare a Master or Primary for replication
+### Prepare a Master or Primary for replication
 
 We need to enable binary logging.
 Assign a unique ID to the primary, and subsequent servers.
@@ -210,7 +212,7 @@ Restart MariaDB and check the variables have been set.
     systemctl restart mariadb
     mariadb
 
-## Creating users
+### Creating users
 
 We need to create a replication user
 
@@ -238,7 +240,7 @@ Test the new user:
 What you can see in `information_schema` depends on your grants.
 Hence why monitoring users tend to have `SELECT` on `*.*`.
 
-## Binary Logs
+### Binary Logs
 
 We can view the current state of the binary logs:
 
@@ -282,7 +284,7 @@ What format are the logs in?
 How can we debug a statement that was written and replicated?
 TOMORROW!
 
-## Backup and restore
+### Backup and restore
 
 There are two main backup tools `mariadb-dump` and `mariadb-backup`.
 Previously named `mysqldump` and `xtrabackup`.
@@ -318,7 +320,7 @@ Can I use this to create a replica?
 
     --master-data=?
 
-## Replication
+### Replication
 
 Why replicate? Off site backups?
 Read capacity? Fail-over capacity?
@@ -340,38 +342,227 @@ What is a relay log?
 
 ## DAY 2
 
-## Diff/Inc restores using Binary logs
+### Install a Plugin
 
-Write logs directly to MariaDB
+We shall install the disks plugin which gives us table view of the local systems disks.
+NOTE: this plugin ONLY works on Linux!
+This plugin also requires the FILE privilege.
 
-    mariadb-binlog [start] [stop] log_file_name[s] | mariadb -u -p
+Install the plugin using SQL:
 
-Debug logs from a remote server:
+    INSTALL SONAME 'disks';
 
-    mariadb-binlog --read-from-remote-server
+Or add it to the config file:
 
-## Dicks Tips
+    plugin_load_add = disks
 
-    client options files
-    I am a dummy, safe updates
-    transactions
-    ignore db
-    rescue file
-    tmux or screen
-    Give the mysql user a shell
-    CHEAT SHEETS
-    common queries and admin tasks
+Some plugins require a different maturity level to be set in the config:
 
-## InnoDB status and recovery
+    plugin_maturity=alpha
 
-    show engine innodb status
-    innodb recovery
-    Online DDL
+Select from the new table:
 
-## Monitoring
+    SELECT * FROM information_schema.DISKS;
 
-    Slow Query log
-    Full Table scans and index usage
-    userstat
-    mariadb to html iframes
+### Replay binary logs
+
+On server 2 stop replication.
+Write more data to server 1.
+Take a fresh backup from server 1:
+
+    DATE=$(20052024_173606)
+    mariadb-dump --single-transaction --quick --all-databases --master-data=1 --gtid > bkp_server1_${DATE}.sql
+
+On server 1, flush the binary logs:
+
+    FLUSH BINARY LOGS;
+
+And then write more data:
+
+    ./writer.sh 1
+
+Create a new table:
+
+    create table test.t2 like test.t1;
+    insert into test.t2 select * from test.t1 limit 100;
+
+Flush the binary logs again:
+
+    FLUSH BINARY LOGS;
+
+Now server 1 has more data than the backup.
+
+Copy the backup and the missing binary logs to server 2.
+
+From server 2, restore the backup
+
+    mariadb < backup_file.sql
+
+Make a note of the currently GTID's:
+
+    select @@gtid_binlog_pos, @@gtid_current_pos, @@gtid_slave_pos;
+
+Use `mariadb-binlog` to replay the files against server 2:
+
+    mariadb-binlog [start] [stop] log_file_name[s] | mariadb
+
+Check the GTID positions again.
+
+Update `gtid_slave_pos` to the correct value, and start replication:
+
+    set global gtid_slave_pos='X-Y-Z';
+    start slave;
+
+    show slave status\G
+
+### Dicks Tips
+
+Customise the client section of options files.
+
+    [client-mariadb]
+    show_warnings
+
+    [mariadb-dump]
+    single_transaction
+    quick
+    events
+    triggers
+    routines
+    comments
+
+Safe updates!
+Append `--safe-updates` or `-U` to `mariadb`.
+`DELETES` and `UPDATES` will require a key to be specified.
+
+Transactions can be useful to undo mistakes on the fly.
+
+    START TRANSACTION;
+    DELETE FROM my_db.my_table;
+    ROLLBACK;
+
+Use Replicatoin Filters to add a non-replicated database!
+Create an empty database, and let it replicate.
+
+    CREATE DATABSE no_repl;
+
+Update the replication filters:
+
+    SET GLOBAL replicate_ignore_db='no_repl'; # comma seperated
+
+Persist the change to a config file:
+
+    [server]
+    replicate_ignore_db=no_repl # one per-line
+
+Create a rescue file using `dd`.
+Running out of space will stop all operations.
+Create a file around 1Gb in size.
+
+    sudo dd if=/dev/zero of=/var/lib/mysql/rescue.file bs=1M count=1000
+
+Use `tmux` or `screen` to handle long running processes.
+
+Optionally give the `mysql` system user a shell.
+Useful to have DBA seperate from root accounts.
+
+    sudo groupadd -r mysql && sudo useradd -s /usr/bin/bash -r -g mysql mysql --home-dir /var/lib/mysql
+
+Modify an existing user:
+
+    sudo usermod mysql -s /usr/bin/bash
+
+Common admin tasks and related information can be obtained using SQL commands.
+
+### InnoDB status and recovery
+
+Read through [InnoDB Recovery Modes](https://mariadb.com/kb/en/innodb-recovery-modes/).
+
+Learn how to read the output of `SHOW ENGINE INNODB STATUS\G`.
+The output is documented [here](https://mariadb.com/kb/en/show-engine-innodb-status/)
+
+### Online DDL
+
+MariaDB supports Online Data Definition Language.
+The locking strategies available are documented [here](https://mariadb.com/kb/en/innodb-online-ddl-overview/)
+
+### Monitoring
+
+Create some noise:
+
+    sudo dnf install sysbench
+    ./run-sysbench.sh
+
+We shall enable the slow query log and examine the output.
+In the config enable slow query logging.
+Once enabled tweak timings dynamically.
+
+    [server]
+    slow_query_log=1
+    slow_query_log_file=slow.log
+    long_query_time=5
+    log_slow_admin_statements=1
+    log_queries_not_using_indexes=0
+
+The variable [`log_queries_not_using_indexes`](https://mariadb.com/kb/en/server-system-variables/#log_queries_not_using_indexes) is dynamic.
+
+Restart the server
+
+    sudo systemctl restart mariadb
+
+Tune the `long_query_time` to start catching queries:
+
+    set global long_query_time=0.5;
+
+Examine the log file being created:
+
+    sudo vim /var/lib/mysql/slow.log
+
+Enable logging of queries not using indexes to see unoptimised tables or queries:
+
+    set global log_queries_not_using_indexes=1;
+
+Review the log again. When ready disable it again:
+
+    set global log_queries_not_using_indexes=0;
+
+### Enable the userstat plugin
+
+The [User Statistics](https://mariadb.com/kb/en/user-statistics/) plugin creates some tables which represent in-memory hash maps which the server actively updates.
+Very minimal overhead, and easier to parse than Performance Schema and Global Status.
+
+Enable the plugin in the config file:
+
+    [server]
+    userstat=1
+
+Or dynamically within the server:
+
+    SET GLOBAL userstat=1;
+
+The tables which are created:
+
+    SELECT * FROM INFORMATION_SCHEMA.USER_STATISTICS\G
+    SELECT * FROM INFORMATION_SCHEMA.CLIENT_STATISTICS\G
+    SELECT * FROM INFORMATION_SCHEMA.INDEX_STATISTICS WHERE TABLE_NAME = "X";
+    SELECT * FROM INFORMATION_SCHEMA.TABLE_STATISTICS WHERE TABLE_NAME='Y';
+
+Use the show commands:
+
+    SHOW USER_STATISTICS;
+    SHOW CLIENT_STATISTICS;
+    SHOW INDEX_STATISTICS;
+    SHOW TABLE_STATISTICS;
+
+The individual tables can be flushed to reset counters when monitoring changes:
+
+    FLUSH USER_STATISTICS;
+    FLUSH CLIENT_STATISTICS;
+    FLUSH INDEX_STATISTICS;
+    FLUSH TABLE_STATISTICS;
+
+### Next Up
+
+MariaDB queries to to html and iframes.
+Performance Schema? In progress.
+Full table scans, index misses, I/O locks/waits.
 
