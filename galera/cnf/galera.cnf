@@ -1,0 +1,15 @@
+[server]
+server_id=1
+bind_address=0
+default_storage_engine=innodb
+innodb_autoinc_lock_mode=2
+log_bin=binlog
+binlog_format=ROW
+expire_logs_days=7
+
+wsrep_on=ON
+wsrep_cluster_name=galera
+wsrep_provider=/usr/lib/galera/libgalera_smm.so
+wsrep_provider_options="gcache.size=1G;gcache.recover=yes"
+wsrep_sst_method=mariabackup
+wsrep_sst_auth=mariabackup:password123
