@@ -366,6 +366,7 @@ Debug logs from a remote server:
 
     show engine innodb status
     innodb recovery
+    Online DDL
 
 ## Monitoring
 
