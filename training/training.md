@@ -338,6 +338,7 @@ Monitor replication.
 What do these fields mean?
 What is a relay log?
 
+## DAY 2
 
 ## Diff/Inc restores using Binary logs
 
@@ -349,27 +350,27 @@ Debug logs from a remote server:
 
     mariadb-binlog --read-from-remote-server
 
-
-## DAY 2
-
 ## Dicks Tips
 
     client options files
     I am a dummy, safe updates
-    show warnings
     transactions
     ignore db
     rescue file
     tmux or screen
     Give the mysql user a shell
     CHEAT SHEETS
+    common queries and admin tasks
 
 ## InnoDB status and recovery
 
+    show engine innodb status
+    innodb recovery
+
 ## Monitoring
 
-    processlist
-    status vs variables
-    common queries
-    
+    Slow Query log
+    Full Table scans and index usage
+    userstat
+    mariadb to html iframes
 
