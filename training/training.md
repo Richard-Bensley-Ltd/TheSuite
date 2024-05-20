@@ -4,20 +4,20 @@ Firstly. What are we covering? This is a 2 day course. Lots to do!
 
 Day 1:
 
-Get installed and get configured.
-Get comfortable with MariaDB and data.
-Logical backups and restores. It's just Linux/Unix.
-Re-covering replication, a bit more on binary logs.
-Diff/Inc backups using a full backup and binary logs.
+* Get installed and get configured.
+* Get comfortable with MariaDB and data.
+* Logical backups and restores. It's just Linux/Unix.
+* Re-covering replication, a bit more on binary logs.
+* Diff/Inc backups using a full backup and binary logs.
 
 Day 2:
 
-Tips
-Slow Query Log.
-InnoDB Status and deadlock monitoring.
-InnoDB recovery steps.
-Prelude to monitoring. What is happening?
-Galera demo.
+* Tips
+* Slow Query Log.
+* InnoDB Status and deadlock monitoring.
+* InnoDB recovery steps.
+* Prelude to monitoring. What is happening?
+* Galera demo.
 
 Secondly, let's get installed. Group exercise.
 
@@ -352,7 +352,7 @@ Debug logs from a remote server:
 
 ## DAY 2
 
-## Dirty Dicks DB Tips
+## Dicks Tips
 
     client options files
     I am a dummy, safe updates
