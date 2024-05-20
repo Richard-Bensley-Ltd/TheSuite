@@ -1,23 +1,11 @@
-$setup= <<-SETUP
-dnf install -yq epel-release
-dnf update -yq
-dnf upgrade -yq
-dnf install -yq vim python3-PyMySQL jq tmux curl wget python3-requests
-dnf install -yq mariadb-server mariadb-backup && \
-    systemctl enable mariadb && \
-    systemctl restart mariadb
-SETUP
-
-
 Vagrant.configure("2") do |config|
   config.vm.box = "generic/rocky9"
+  config.vm.synced_folder ".", "/vagrant"
 
   1.upto(2) do |i|
-      config.vm.define "db#{i}" do |node|
-        node.vm.hostname = "db#{i}"
-        node.vm.provision "shell", inline: $setup
+    config.vm.define "db#{i}" do |node|
+      node.vm.hostname = "db#{i}"
+      node.vm.provision "shell", path: "setup.sh"
     end
   end
-
 end
-
