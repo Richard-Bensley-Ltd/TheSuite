@@ -370,7 +370,7 @@ On server 2 stop replication.
 Write more data to server 1.
 Take a fresh backup from server 1:
 
-    DATE=$(20052024_173606)
+    DATE=$(date +'%d%m%Y_%H%M%S')
     mariadb-dump --single-transaction --quick --all-databases --master-data=1 --gtid > bkp_server1_${DATE}.sql
 
 On server 1, flush the binary logs:
