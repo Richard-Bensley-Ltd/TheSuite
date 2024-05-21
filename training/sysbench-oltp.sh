@@ -13,6 +13,7 @@ echo "Existing tables count: ${COUNT}"
 if [[ $COUNT -lt $TABLES ]]
 then
     mariadb -NBe "drop database if exists sbtest;"
+    mariadb -NBe "create schema if not exists sbtest;"
     sysbench \
     --db-driver=mysql \
     --mysql-user=dba \
