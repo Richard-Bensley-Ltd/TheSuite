@@ -18,10 +18,9 @@ counter=0
 
 while true
 do
-    mariadb -NBe "INSERT INTO test.slow_test (c) VALUES ('rand text ${counter}');"
+    mariadb -NBe "INSERT INTO test.slow_test (c,d) VALUES ('rand text ${counter}', RAND());"
     counter=$((counter+1))
     echo -en "$(date)\t${counter} inserts\r"
-    sleep ${SLEEPTIME}
     if [[ $counter -ge $LIMIT ]]
     then
         echo "Limit reached: ${counter}"
